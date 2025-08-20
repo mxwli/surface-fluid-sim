@@ -18,6 +18,11 @@ function Sand() {
     }, [frame]);
 
     const [grid, setGrid] = useState<number[][]>([]);
+    const [tot, setTotal] = useState(0);
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const [curVal, setCurVal] = useState(0);
+    const [mouseDown, setMouseDown] = useState(false);
+    const [threshold, setThreshold] = useState(200);
 
     useEffect(() => {
         const newGrid: number[][] = Array.from({ length: height }, () => Array(width).fill(0));
@@ -50,13 +55,18 @@ function Sand() {
                     let nx = x + d[0];
                     let ny = y + d[1];
                     if (!wb(nx, ny)) continue;
-                    if (grid[ny][nx] + 1 < grid[y][x])
+                    if (grid[ny][nx] + threshold < grid[y][x])
                         newGrid[y][x]--;
-                    if (grid[ny][nx] - 1 > grid[y][x])
+                    if (grid[ny][nx] - threshold > grid[y][x])
                         newGrid[y][x]++;
                 }
             }
         }
+        if (mouseDown) {
+            newGrid[mousePos.y][mousePos.x] -= 50;
+        }
+        setCurVal(newGrid[mousePos.y][mousePos.x]);
+        setTotal(newGrid.reduce((acc, row) => acc + row.reduce((sum, val) => sum + val, 0), 0));
         setGrid(newGrid);
 
         const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -66,8 +76,37 @@ function Sand() {
         }
     }, [frame]);
 
-    return <canvas width={1000} height={900}
-        id="canvas"></canvas>
+    function handleMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
+        const canvas = e.currentTarget;
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) / (rect.width / width));
+        const y = Math.floor((e.clientY - rect.top) / (rect.height / height));
+        setMousePos({ x, y });
+        setMouseDown(true);
+    }
+
+    function handleMouseUp() {
+        setMouseDown(false);
+    }
+
+    function handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
+        const canvas = e.currentTarget;
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) / (rect.width / width));
+        const y = Math.floor((e.clientY - rect.top) / (rect.height / height));
+        setMousePos({ x, y });
+    }
+
+    return <>
+            <canvas width={1000} height={900} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove} id="canvas"></canvas>
+            <div style={{marginTop: 20}}>Total: {tot}</div>
+            <div>Current: {curVal}</div>
+            <div>
+                <div>Threshold: {threshold}</div>
+                <input type="range" min="0" max="200" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} />
+            </div>
+        </>
 }
 
 createRoot(document.getElementById('root')!).render(
