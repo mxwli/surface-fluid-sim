@@ -22,7 +22,8 @@ function Sand() {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 }); // mouse position
     const [curVal, setCurVal] = useState(0); // value at mouse position
     const [mouseDown, setMouseDown] = useState(false); // mouse down state
-    const [threshold, setThreshold] = useState(200); // threshold for grid adjustment
+    const [threshold, setThreshold] = useState(20); // threshold for grid adjustment
+    const [flowRate, setFlowRate] = useState(0.01);
 
     useEffect(() => {
         const newGrid: number[][] = Array.from({ length: height }, () => Array(width).fill(0));
@@ -37,16 +38,14 @@ function Sand() {
     useEffect(() => {
         if (grid.length === 0) return;
         const newGrid: number[][] = Array.from({ length: height }, () => Array(width).fill(0));
-        let dirs = [
-            [0, 1],   // right
-            [1, 0],   // down
-            [0, -1],  // left
-            [-1, 0],  // up
-            [1, 1],   // down-right
-            [1, -1],  // down-left
-            [-1, 1],  // up-right
-            [-1, -1]  // up-left
-        ];
+        let dirs: number[][] = [];
+        for (let dx = -2; dx <= 2; dx++) {
+            for (let dy = -2; dy <= 2; dy++) {
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 2) continue;
+                dirs.push([dx, dy, dist]);
+            }
+        }
         let wb = (x: number, y: number) => x >= 0 && x < width && y >= 0 && y < height;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
@@ -55,10 +54,14 @@ function Sand() {
                     let nx = x + d[0];
                     let ny = y + d[1];
                     if (!wb(nx, ny)) continue;
-                    if (grid[ny][nx] + threshold < grid[y][x])
-                        newGrid[y][x]--;
-                    if (grid[ny][nx] - threshold > grid[y][x])
-                        newGrid[y][x]++;
+                    let diff = 0;
+                    if (grid[ny][nx] + threshold*d[2] < grid[y][x])
+                        diff = grid[ny][nx] + threshold * d[2] - grid[y][x];
+                    if (grid[ny][nx] - threshold*d[2] > grid[y][x])
+                        diff = grid[ny][nx] - threshold * d[2] - grid[y][x];
+                    if (diff != 0) {
+                        newGrid[y][x] += diff * flowRate;
+                    }
                 }
             }
         }
@@ -112,12 +115,14 @@ function Sand() {
             <div>Current: {curVal}</div>
             <div>
                 <div>Threshold: {threshold}</div>
-                <input type="range" min="0" max="200" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} />
+                <input type="range" min="0" max="40" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} />
+                <div>Flow rate: {flowRate}</div>
+                <input type="range" min="0" max="0.04" step="0.01" value={flowRate} onChange={(e) => setFlowRate(Number(e.target.value))} />
             </div>
             <div>
-                <p>Computationally inexpensive, but slow to propagate values</p>
-                <p>creates square-ish artifacts</p>
-                <p>Effect distance can be approximated as value / threshold</p>
+                <p>Still reasonably inexpensive, but extreme values are still slowly propagated</p>
+                <p>No longer creates "concentric square" artifacts</p>
+                <p>Effect distance is still (probably) about value / threshold</p>
             </div>
         </>
 }
