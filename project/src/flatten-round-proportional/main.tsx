@@ -120,8 +120,8 @@ function Sand() {
                 <input type="range" min="0" max="0.04" step="0.01" value={flowRate} onChange={(e) => setFlowRate(Number(e.target.value))} />
             </div>
             <div>
-                <p>Still reasonably inexpensive, but extreme values are still slowly propagated</p>
-                <p>No longer creates "concentric square" artifacts</p>
+                <p>Still reasonably inexpensive, extreme values are quickly propagated</p>
+                <p>Does not create "concentric square" artifacts</p>
                 <p>Effect distance is still (probably) about value / threshold</p>
             </div>
         </>
