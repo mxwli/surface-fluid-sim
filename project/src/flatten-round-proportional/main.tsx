@@ -54,14 +54,19 @@ function Sand() {
                     let nx = x + d[0];
                     let ny = y + d[1];
                     if (!wb(nx, ny)) continue;
-                    let diff = 0;
-                    if (grid[ny][nx] + threshold*d[2] < grid[y][x])
-                        diff = grid[ny][nx] + threshold * d[2] - grid[y][x];
-                    if (grid[ny][nx] - threshold*d[2] > grid[y][x])
-                        diff = grid[ny][nx] - threshold * d[2] - grid[y][x];
-                    if (diff != 0) {
-                        newGrid[y][x] += diff * flowRate;
-                    }
+                    // let diff = 0;
+                    // if (grid[ny][nx] + threshold*d[2] < grid[y][x])
+                    //     diff = grid[ny][nx] + threshold * d[2] - grid[y][x];
+                    // if (grid[ny][nx] - threshold*d[2] > grid[y][x])
+                    //     diff = grid[ny][nx] - threshold * d[2] - grid[y][x];
+                    // if (diff != 0) {
+                    //     newGrid[y][x] += diff * flowRate / d[2];
+                    // }
+                    let slope = (grid[ny][nx] - grid[y][x]) / d[2];
+                    if (slope < -threshold) slope += threshold;
+                    else if (slope > threshold) slope -= threshold;
+                    else slope = 0;
+                    newGrid[y][x] += slope * flowRate;
                 }
             }
         }
@@ -117,7 +122,7 @@ function Sand() {
                 <div>Threshold: {threshold}</div>
                 <input type="range" min="0" max="40" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} />
                 <div>Flow rate: {flowRate}</div>
-                <input type="range" min="0" max="0.04" step="0.01" value={flowRate} onChange={(e) => setFlowRate(Number(e.target.value))} />
+                <input type="range" min="0" max="0.15" step="0.01" value={flowRate} onChange={(e) => setFlowRate(Number(e.target.value))} />
             </div>
             <div>
                 <p>Still reasonably inexpensive, extreme values are quickly propagated</p>
